@@ -1,0 +1,36 @@
+.chart-box {
+  position: relative;
+  height: 260px;
+}
+
+.target-cell {
+  max-width: 28rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-row {
+  cursor: pointer;
+}
+
+.link-row.active {
+  --bs-table-bg: var(--bs-primary-bg-subtle);
+}
+
+.bar-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.bar-label > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-track {
+  height: 0.4rem;
+}

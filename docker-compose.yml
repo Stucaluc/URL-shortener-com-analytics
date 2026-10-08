@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: shortener
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no arquivo .env}
+      POSTGRES_DB: shortener
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shortener -d shortener"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      DATABASE_URL: postgres://shortener:${POSTGRES_PASSWORD}@db:5432/shortener
+      BASE_URL: ${BASE_URL:-http://localhost:3000}
+      API_KEY: ${API_KEY:?Defina API_KEY no arquivo .env}
+      IP_HASH_SALT: ${IP_HASH_SALT:?Defina IP_HASH_SALT no arquivo .env}
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+      COUNTRY_HEADER: ${COUNTRY_HEADER:-}
+    ports:
+      - "${PORT:-3000}:3000"
+
+volumes:
+  pgdata:

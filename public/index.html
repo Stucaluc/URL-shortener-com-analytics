@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Encurtador de URLs · Analytics</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container py-4">
+      <header class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+        <div>
+          <h1 class="h3 mb-0">Encurtador de URLs</h1>
+          <p class="text-body-secondary mb-0">Crie links curtos e acompanhe os cliques.</p>
+        </div>
+        <form id="key-form" class="d-flex gap-2" autocomplete="off">
+          <label for="api-key" class="visually-hidden">API key</label>
+          <input
+            id="api-key"
+            type="password"
+            class="form-control"
+            placeholder="API key (x-api-key)"
+            autocomplete="off"
+          />
+          <button class="btn btn-outline-secondary text-nowrap" type="submit">Usar chave</button>
+        </form>
+      </header>
+
+      <div id="alert" class="alert d-none" role="alert"></div>
+
+      <section class="card mb-4" aria-labelledby="create-title">
+        <div class="card-body">
+          <h2 id="create-title" class="h5 card-title">Novo link</h2>
+          <form id="create-form" class="row g-3" novalidate>
+            <div class="col-12 col-lg-6">
+              <label for="url" class="form-label">URL de destino</label>
+              <input id="url" name="url" type="url" class="form-control" placeholder="https://exemplo.com/pagina-longa" required />
+            </div>
+            <div class="col-6 col-lg-2">
+              <label for="alias" class="form-label">Alias <span class="text-body-secondary">(opcional)</span></label>
+              <input id="alias" name="alias" type="text" class="form-control" placeholder="minha-promo" maxlength="32" pattern="[A-Za-z0-9_\-]{3,32}" />
+            </div>
+            <div class="col-6 col-lg-2">
+              <label for="expires" class="form-label">Expira em <span class="text-body-secondary">(opcional)</span></label>
+              <input id="expires" name="expires" type="datetime-local" class="form-control" />
+            </div>
+            <div class="col-12 col-lg-2 d-flex align-items-end">
+              <button class="btn btn-primary w-100" type="submit">Encurtar</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="card mb-4" aria-labelledby="links-title">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 id="links-title" class="h5 card-title mb-0">Links</h2>
+            <button id="refresh" class="btn btn-sm btn-outline-secondary" type="button">Atualizar</button>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">Link curto</th>
+                  <th scope="col">Destino</th>
+                  <th scope="col" class="text-end">Cliques</th>
+                  <th scope="col">Criado em</th>
+                  <th scope="col"><span class="visually-hidden">Ações</span></th>
+                </tr>
+              </thead>
+              <tbody id="links-body"></tbody>
+            </table>
+          </div>
+          <p id="links-empty" class="text-body-secondary mb-0 d-none">Nenhum link criado ainda.</p>
+        </div>
+      </section>
+
+      <section id="stats" class="card d-none" aria-labelledby="stats-title">
+        <div class="card-body">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h2 id="stats-title" class="h5 card-title mb-0">Estatísticas</h2>
+            <div>
+              <label for="days" class="visually-hidden">Período</label>
+              <select id="days" class="form-select form-select-sm">
+                <option value="7">Últimos 7 dias</option>
+                <option value="30" selected>Últimos 30 dias</option>
+                <option value="90">Últimos 90 dias</option>
+                <option value="365">Últimos 365 dias</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <div class="border rounded p-3">
+                <div class="text-body-secondary small">Cliques</div>
+                <div id="kpi-total" class="fs-3 fw-semibold">0</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="border rounded p-3">
+                <div class="text-body-secondary small">Visitantes únicos</div>
+                <div id="kpi-unique" class="fs-3 fw-semibold">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-12 col-lg-8">
+              <h3 class="h6">Cliques por dia (UTC)</h3>
+              <div class="chart-box"><canvas id="chart-daily" role="img" aria-label="Gráfico de cliques por dia"></canvas></div>
+            </div>
+            <div class="col-12 col-lg-4">
+              <h3 class="h6">Dispositivos</h3>
+              <div class="chart-box"><canvas id="chart-devices" role="img" aria-label="Gráfico de dispositivos"></canvas></div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3"><h3 class="h6">Origem (referrer)</h3><div id="list-referrers"></div></div>
+            <div class="col-12 col-md-6 col-xl-3"><h3 class="h6">Navegadores</h3><div id="list-browsers"></div></div>
+            <div class="col-12 col-md-6 col-xl-3"><h3 class="h6">Sistemas operacionais</h3><div id="list-os"></div></div>
+            <div class="col-12 col-md-6 col-xl-3"><h3 class="h6">Países</h3><div id="list-countries"></div></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.js"
+      integrity="sha384-hfkuqrKeWFmnTMWN31VWyoe8xgdTADD11kgxmdpx2uyE6j5Az5uZq6u6AKYYmAOw"
+      crossorigin="anonymous"
+    ></script>
+    <script src="app.js"></script>
+  </body>
+</html>
